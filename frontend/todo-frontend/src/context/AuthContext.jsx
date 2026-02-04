@@ -1,44 +1,34 @@
 import { createContext, useState, useEffect, useContext } from 'react';
-import api from '../api';
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [token, setToken] = useState(localStorage.getItem('token'));
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Check local storage on load
+    const token = localStorage.getItem('token');
     if (token) {
-      // In a real app, you might validate the token with the backend here
-      // For this speedrun, if token exists, we assume logged in
-      setUser({ email: 'User' }); 
+      setUser({ token }); 
     }
     setLoading(false);
-  }, [token]);
+  }, []);
 
-  const login = async (email, password) => {
-    const res = await api.post('/auth/login', { email, password });
-    localStorage.setItem('token', res.data.token);
-    setToken(res.data.token);
-    setUser({ email });
-  };
-
-  const register = async (email, password) => {
-    const res = await api.post('/auth/register', { email, password });
-    localStorage.setItem('token', res.data.token);
-    setToken(res.data.token);
-    setUser({ email });
+  // FIXED: Simply accepts the token (AuthPage already handled the API call)
+  const login = (token) => {
+    localStorage.setItem('token', token);
+    setUser({ token });
   };
 
   const logout = () => {
     localStorage.removeItem('token');
-    setToken(null);
     setUser(null);
   };
 
+  // Prevent rendering until we check for a token
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, logout, loading }}>
       {!loading && children}
     </AuthContext.Provider>
   );

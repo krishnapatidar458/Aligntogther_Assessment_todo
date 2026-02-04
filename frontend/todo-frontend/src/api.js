@@ -1,7 +1,8 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'https://aligntogther-assessment-todo.onrender.com/api', // Match your Spring Boot Port
+  // FIXED: Base URL now includes '/api' to match your Backend Controller paths
+  baseURL: 'https://aligntogther-assessment-todo.onrender.com/api', 
 });
 
 // Add a request interceptor to add the JWT token to every request

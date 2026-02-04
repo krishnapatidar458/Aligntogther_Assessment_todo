@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import api from '../api'; // IMPT: Import the API helper we created
 
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
@@ -9,14 +10,14 @@ export default function AuthPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   
-  const { login, register } = useAuth();
+  // We only need 'login' from context to save the token after API success
+  const { login } = useAuth(); 
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     
-    // Validation
     if (!email.includes('@') || password.length < 3) {
       setError('Please provide a valid email and password (min 3 chars).');
       return;
@@ -24,14 +25,20 @@ export default function AuthPage() {
 
     setLoading(true);
     try {
-      if (isLogin) {
-        await login(email, password);
-      } else {
-        await register(email, password);
-      }
+      // 1. Determine endpoint based on mode
+      const endpoint = isLogin ? '/auth/login' : '/auth/register';
+      
+      // 2. Make the actual API call
+      const response = await api.post(endpoint, { email, password });
+      
+      // 3. Update Global State with the token we got back
+      login(response.data.token);
+      
+      // 4. Redirect
       navigate('/todos');
     } catch (err) {
-      setError('Authentication failed. Check credentials or try a different email.');
+      console.error(err);
+      setError('Authentication failed. ' + (err.response?.data || 'Check your connection.'));
     } finally {
       setLoading(false);
     }
