@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: todo-app
+    ports:
+      - "8080:8080"
+    environment:
+      # These override settings in application.properties
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://ep-nameless-thunder-aiu6lfm2-pooler.c-4.us-east-1.aws.neon.tech/todo?sslmode=require
+      - SPRING_DATASOURCE_USERNAME=neondb_owner
+      - SPRING_DATASOURCE_PASSWORD=npg_D4Jih9kaqgxY
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      # Set your JWT Secret here (Replace with a strong key)
+      - JWT_SECRET=5367566B59703373367639792F423F4528482B4D6251655468576D5A71347437
+    depends_on:
+      - todo-db
+    networks:
+      - todo-network
+
+  todo-db:
+    image: postgres:16-alpine
+    container_name: todo-db
+    environment:
+      - POSTGRES_DB=todo
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - todo-network
+
+networks:
+  todo-network:
+    driver: bridge
+
+volumes:
+  postgres-data:
