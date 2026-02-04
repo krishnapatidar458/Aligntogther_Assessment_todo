@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import api from '../api'; // IMPT: Import the API helper we created
+import api from '../api';
+import { Lock, Mail, Loader2, ArrowRight } from 'lucide-react';
 
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
@@ -10,69 +11,67 @@ export default function AuthPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   
-  // We only need 'login' from context to save the token after API success
-  const { login } = useAuth(); 
+  const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    
     if (!email.includes('@') || password.length < 3) {
-      setError('Please provide a valid email and password (min 3 chars).');
+      setError('Please enter a valid email and password.');
       return;
     }
 
     setLoading(true);
     try {
-      // 1. Determine endpoint based on mode
       const endpoint = isLogin ? '/auth/login' : '/auth/register';
-      
-      // 2. Make the actual API call
-      const response = await api.post(endpoint, { email, password });
-      
-      // 3. Update Global State with the token we got back
-      login(response.data.token);
-      
-      // 4. Redirect
+      const res = await api.post(endpoint, { email, password });
+      login(res.data.token);
       navigate('/todos');
     } catch (err) {
-      console.error(err);
-      setError('Authentication failed. ' + (err.response?.data || 'Check your connection.'));
+      setError(err.response?.data?.message || 'Authentication failed. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
-      <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-        <h2 className="text-2xl font-bold mb-6 text-center text-blue-600">
-          {isLogin ? 'Welcome Back' : 'Create Account'}
-        </h2>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 p-4">
+      <div className="bg-white/95 backdrop-blur-sm p-8 rounded-2xl shadow-2xl w-full max-w-md border border-white/20">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+            {isLogin ? 'Welcome Back' : 'Join Us'}
+          </h1>
+          <p className="text-gray-500 mt-2 text-sm">
+            {isLogin ? 'Enter your credentials to access your tasks' : 'Create an account to get started'}
+          </p>
+        </div>
         
         {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded mb-4 text-sm">
+          <div className="mb-6 bg-red-50 text-red-600 text-sm p-3 rounded-lg border border-red-100 flex items-center justify-center">
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Email</label>
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div className="relative group">
+            <Mail className="absolute left-3 top-3.5 h-5 w-5 text-gray-400 group-focus-within:text-indigo-500 transition-colors" />
             <input
               type="email"
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              placeholder="name@example.com"
+              className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
             />
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Password</label>
+          
+          <div className="relative group">
+            <Lock className="absolute left-3 top-3.5 h-5 w-5 text-gray-400 group-focus-within:text-indigo-500 transition-colors" />
             <input
               type="password"
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              placeholder="••••••••"
+              className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -82,19 +81,26 @@ export default function AuthPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none disabled:bg-blue-300"
+            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-xl transition-all shadow-lg shadow-indigo-500/30 flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed"
           >
-            {loading ? 'Processing...' : (isLogin ? 'Sign In' : 'Sign Up')}
+            {loading ? <Loader2 className="animate-spin h-5 w-5" /> : (
+              <>
+                {isLogin ? 'Sign In' : 'Create Account'} <ArrowRight className="h-5 w-5" />
+              </>
+            )}
           </button>
         </form>
 
-        <div className="mt-4 text-center">
-          <button
-            onClick={() => setIsLogin(!isLogin)}
-            className="text-sm text-blue-600 hover:text-blue-500"
-          >
-            {isLogin ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
-          </button>
+        <div className="mt-8 text-center">
+          <p className="text-sm text-gray-600">
+            {isLogin ? "Don't have an account?" : "Already have an account?"}
+            <button
+              onClick={() => setIsLogin(!isLogin)}
+              className="ml-2 font-semibold text-indigo-600 hover:text-indigo-700 hover:underline transition-all"
+            >
+              {isLogin ? 'Sign up' : 'Log in'}
+            </button>
+          </p>
         </div>
       </div>
     </div>
