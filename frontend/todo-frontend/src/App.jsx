@@ -2,15 +2,14 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import AuthPage from './pages/AuthPage';
 import TodoPage from './pages/TodoPage';
+import { Toaster } from 'react-hot-toast'; // Import Toaster
 
-// Protected Route Wrapper
 const ProtectedRoute = ({ children }) => {
   const { user } = useAuth();
   if (!user) return <Navigate to="/" />;
   return children;
 };
 
-// Public Route (redirect to todos if already logged in)
 const PublicRoute = ({ children }) => {
   const { user } = useAuth();
   if (user) return <Navigate to="/todos" />;
@@ -21,17 +20,15 @@ function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
+        {/* Configure the notification design */}
+        <Toaster position="top-right" toastOptions={{
+          style: { background: '#333', color: '#fff' },
+          success: { iconTheme: { primary: '#4ade80', secondary: 'black' } },
+        }} />
+        
         <Routes>
-          <Route path="/" element={
-            <PublicRoute>
-              <AuthPage />
-            </PublicRoute>
-          } />
-          <Route path="/todos" element={
-            <ProtectedRoute>
-              <TodoPage />
-            </ProtectedRoute>
-          } />
+          <Route path="/" element={<PublicRoute><AuthPage /></PublicRoute>} />
+          <Route path="/todos" element={<ProtectedRoute><TodoPage /></ProtectedRoute>} />
         </Routes>
       </AuthProvider>
     </BrowserRouter>
